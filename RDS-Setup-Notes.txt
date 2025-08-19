@@ -1,0 +1,51 @@
+# RDS Setup Notes
+
+**Goal**: Deploy a secure and private RDS database inside our custom VPC, only accessible from the private subnet (via Bastion Host or EC2 in the app tier).
+
+---
+
+## 🔹 RDS Instance Configuration
+- **Engine**: MySQL *(Free Tier eligible)*
+- **DB Instance Class**: `db.t3.micro` or `db.t4g.micro`
+- **Storage Type**: General Purpose (SSD)
+- **Multi-AZ**:  Disabled *(Free tier limit)*
+
+---
+
+## 🔹 Connectivity
+- **VPC**: Custom VPC
+- **Subnet Group**: Private Subnet Group (2 private subnets)
+- **Public Access**:  No
+- **Availability Zone**: Private subnets
+- **Security Group**: Allows port 3306 only from Bastion Host SG
+
+---
+
+## 🔹 Authentication
+- **Master username/password**: Created and saved
+- **IAM Auth**:  Disabled
+
+---
+
+## 🔹 Monitoring
+- **Enhanced Monitoring**: Disabled
+- **CloudWatch Logs**:  Not enabled
+- **Backup**: 1-day retention
+
+---
+
+## 📷 Screenshots Saved
+1. `rds-instance-summary.png`
+2. `rds-connectivity-settings.png`
+3. `rds-subnet-group.png`
+4. `rds-security-group.png`
+
+---
+
+## ✅ Validation
+```bash
+mysql -h <rds-endpoint> -u <username> -p
+```
+
+
+
