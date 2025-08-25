@@ -1,4 +1,4 @@
-Serverless Task Manager 🚀
+Project 2: Serverless Task Manager 🚀
 This is a full-stack, serverless web application that allows users to create tasks. The project serves as a comprehensive demonstration of core AWS services and a practical example of a modern, cloud-native architecture.
 
 🎯 Project Goal
