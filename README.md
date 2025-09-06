@@ -1,68 +1,133 @@
-Project 2: Serverless Task Manager 🚀
-This is a full-stack, serverless web application that allows users to create tasks. The project serves as a comprehensive demonstration of core AWS services and a practical example of a modern, cloud-native architecture.
+ AWS 3-Tier Web Architecture (Hands-On Portfolio Project)
 
-🎯 Project Goal
-The primary objective of this project is to create a secure, scalable, and highly available task management application without using any traditional servers. It showcases the ability to build a complete application using the AWS serverless ecosystem, from user authentication to data storage.
+This is a **real-world AWS architecture project** I built from scratch to practice designing **secure, scalable, production-grade cloud infrastructure**.
 
-🛠️ Technologies Used
-Frontend
-HTML & CSS: The foundational structure and styling of the web page.
+It follows the **3-tier model** with networking, compute, and database layers, using **VPC, subnets, EC2, ALB, Auto Scaling, RDS, S3, IAM, and CloudWatch**.
 
-Tailwind CSS: A utility-first CSS framework for rapid and responsive UI development.
+I built this project as part of my personal **cloud portfolio** to demonstrate skills in AWS core services, automation, and security best practices.
 
-JavaScript: The logic for handling user authentication, form submissions, and API calls.
+---
 
-Amazon S3: Used for static website hosting, serving the index.html file to users.
+## 📌 Goals
 
-Amazon CloudFront: A Content Delivery Network (CDN) used to securely deliver the website and improve performance.
+* Build a VPC network with **public + private subnets**
+* Launch **EC2 instances** in private subnets
+* Set up **Application Load Balancer (ALB) + Auto Scaling Group (ASG)**
+* Deploy **RDS database** in private subnet
+* Provide EC2 read-only access to **S3** bucket
+* Apply **IAM roles, least-privilege, and security groups**
+* Configure **CloudWatch monitoring + SNS email alerts**
 
-Backend (Serverless)
-Amazon Cognito: Manages user authentication, providing a secure hosted UI for user sign-in and a robust identity token to secure API access.
+---
 
-Amazon API Gateway: Acts as the "front door" to the backend, routing authenticated requests from the frontend to the appropriate Lambda function.
+## 🧱 Architecture Overview
 
-AWS Lambda: A serverless compute service that runs the backend logic for creating new tasks. It is invoked by API Gateway.
+### **Network**
 
-Amazon DynamoDB: A NoSQL database used to store the task data in a scalable and highly available manner.
+* Custom **VPC** with 2 public + 2 private subnets (across 2 AZs)
+* **Internet Gateway** → public internet access
+* **NAT Gateway** → private subnet outbound access
+* **Route Tables** configured for IGW + NAT
 
-🏗️ Architecture
-The user's journey begins by accessing the static index.html file, which is hosted on Amazon S3 and delivered via CloudFront.
+### **Compute**
 
-If the user is not authenticated, the JavaScript redirects them to the secure Cognito Hosted UI for sign-in.
+* **Bastion Host (EC2)** in public subnet → SSH access (restricted to my IP)
+* **App Servers (EC2)** in private subnets → managed by Auto Scaling Group
+* **Application Load Balancer (ALB)** in public subnet routes traffic to EC2s
+* EC2 **IAM Role** grants access to S3, CloudWatch, SNS
 
-Upon successful sign-in, Cognito redirects the user back to the application with a temporary authorization code. The JavaScript exchanges this code for an ID token.
+### **Database**
 
-The sign-in screen is then replaced with the Task Manager form.
+* **Amazon RDS (MySQL)** in private subnet
+* No public exposure → only accessible from EC2 App SG
 
-When a user submits a new task, the JavaScript makes a secure POST request to the API Gateway endpoint.
+### **Storage & Monitoring**
 
-API Gateway validates the request using the user's id_token and then invokes the Lambda function.
+* **S3 bucket** for static hosting (public read for files)
+* **CloudWatch alarms** for EC2 metrics
+* **SNS** for email alerts (CPU threshold, failures)
 
-The Lambda function receives the task data and securely stores it in a DynamoDB table.
+---
 
-A success or failure message is returned to the webpage, providing real-time feedback to the user.
+## ⚙️ Auto Scaling Setup
 
-🏃 Getting Started
-This project assumes you have an AWS account with the following services already configured:
+* **Launch Template** with AMI, instance type, SG, IAM role, and user-data
+* **Auto Scaling Group**:
 
-S3 Bucket for static website hosting.
+  * Min: 1, Max: 3 instances
+  * Target Group linked to ALB
+  * Health checks ensure auto-replacement of failed EC2s
 
-CloudFront Distribution pointing to your S3 bucket.
+---
 
-Cognito User Pool and an App Client.
+## 🔐 Security Best Practices
 
-API Gateway REST API with a POST method.
+* App Servers + RDS inside **private subnets**
+* SSH only via **Bastion Host** (restricted by IP)
+* ALB accepts public HTTP/HTTPS → forwards only to healthy EC2s
+* RDS only accessible from **App Server Security Group**
+* EC2 IAM roles grant **least-privilege access**:
 
-Lambda Function to handle API requests and write to a DynamoDB table.
+  * Read-only → S3
+  * Write → CloudWatch Logs
+  * Publish → SNS
 
-DynamoDB Table to store the tasks.
+---
 
-To get the application up and running:
+## ✅ AWS Services Used
 
-Clone this repository.
+* **Networking:** VPC, Subnets, Route Tables, IGW, NAT
+* **Compute:** EC2 (App + Bastion), Launch Templates, ASG, ALB
+* **Database:** RDS (MySQL)
+* **Storage:** S3 (static hosting + EC2 access)
+* **Security:** IAM Roles, Security Groups
+* **Monitoring:** CloudWatch + SNS
 
-Open the index.html file and update the domain, clientId, and loginPageRedirect variables with your specific AWS resource details.
+---
 
-Upload the index.html file to your S3 bucket.
+## 🧠 Key Learnings
 
-Access the website via your CloudFront URL to begin using the application!
+* Designing a secure **multi-tier VPC** with public/private subnets
+* Using **Auto Scaling + ALB** for high availability
+* Enforcing **least privilege IAM policies** for EC2
+* Securely connecting **EC2 → RDS**
+* Setting up **monitoring + alerts** with CloudWatch + SNS
+
+---
+
+## 📸 Screenshots (Examples)
+
+* VPC + Subnets
+* ALB + Target Group (healthy instances)
+* Auto Scaling Group configuration
+* RDS private instance (no public access)
+* S3 bucket setup
+* CloudWatch alarms + SNS email
+
+---
+
+## 🛠️ Reproduction Steps
+
+1. Create VPC with 2 public + 2 private subnets across AZs
+2. Add Internet Gateway + NAT Gateway
+3. Launch Bastion Host (EC2) in public subnet
+4. Create Launch Template for App EC2
+5. Configure Auto Scaling Group + attach ALB Target Group
+6. Deploy ALB with HTTP listener
+7. Launch RDS (MySQL) in private subnet
+8. Create S3 bucket + grant EC2 IAM read-only access
+9. Attach IAM roles for EC2 → S3, CloudWatch, SNS
+10. Set CloudWatch alarm (CPU) + SNS notification
+
+---
+
+## 🧪 Testing
+
+* Verified SSH only works via Bastion
+* ALB forwards HTTP traffic → App Servers in private subnet
+* App EC2 can connect to RDS via SG rules
+* App EC2 can read from S3 bucket
+* CloudWatch alarm triggered → SNS email received
+
+
+Do you want me to draft that **now**, or do you first want to upload this README to GitHub and then continue?
